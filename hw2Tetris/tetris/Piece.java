@@ -28,14 +28,27 @@ public class Piece {
 	private int height;
 	private Piece next; // "next" rotation
 
-	static private Piece[] pieces;	// singleton static array of first rotations
+	private static Piece[] pieces;	// singleton static array of first rotations
+	private static final int PIECE_BLOCK_AMOUNT = 4;
 
 	/**
 	 Defines a new piece given a TPoint[] array of its body.
 	 Makes its own copy of the array and the TPoints inside it.
 	*/
 	public Piece(TPoint[] points) {
-		// YOUR CODE HERE
+		body = new TPoint[points.length];
+		width = height = 0;
+		for (int i = 0; i < points.length; i++) {
+			body[i] = new TPoint(points[i]);
+			width = Math.max(width, body[i].x + 1);
+			height = Math.max(height, body[i].y + 1);
+		}
+		// sort body here so that it's handy to implement equals
+		Arrays.sort(body);
+		skirt = new int[width];
+		Arrays.fill(skirt, 0, width, height);
+		for (TPoint point : points)
+			skirt[point.x] = Math.min(skirt[point.x], point.y);
 	}
 	
 
@@ -88,7 +101,10 @@ public class Piece {
 	 rotated from the receiver.
 	 */
 	public Piece computeNextRotation() {
-		return null; // YOUR CODE HERE
+		TPoint[] points = new TPoint[PIECE_BLOCK_AMOUNT];
+		for (int i = 0; i < PIECE_BLOCK_AMOUNT; i++)
+			points[i] = new TPoint(Math.abs(body[i].y - height + 1), body[i].x);
+		return new Piece(points);
 	}
 
 	/**
@@ -120,8 +136,7 @@ public class Piece {
 		if (!(obj instanceof Piece)) return false;
 		Piece other = (Piece)obj;
 		
-		// YOUR CODE HERE
-		return true;
+		return Arrays.equals(body, other.getBody());
 	}
 
 
@@ -187,7 +202,17 @@ public class Piece {
 	 to the first piece.
 	*/
 	private static Piece makeFastRotations(Piece root) {
-		return null; // YOUR CODE HERE
+		Piece currPiece = root;
+		while (true) {
+			Piece nextPiece = currPiece.computeNextRotation();
+			if (root.equals(nextPiece)) {
+				currPiece.next = root;
+				break;
+			}
+			currPiece.next = nextPiece;
+			currPiece = nextPiece;
+		}
+		return root;
 	}
 	
 	

@@ -29,6 +29,7 @@ public class PieceTest {
 		
 		s = new Piece(Piece.S1_STR);
 		sRotated = s.computeNextRotation();
+
 	}
 	
 	// Here are some sample tests to get you started
@@ -63,5 +64,28 @@ public class PieceTest {
 		assertTrue(Arrays.equals(new int[] {1, 0}, sRotated.getSkirt()));
 	}
 	
-	
+	// Test fast rotation
+	@Test
+	public void TestFastRotation() {
+		Piece[] pieces = Piece.getPieces();
+		
+		// Test pyramid fast rotation
+		Piece firstPyr = pieces[Piece.PYRAMID];
+		
+		assertEquals(pyr2, firstPyr.fastRotation());
+		assertEquals(pyr3, firstPyr.fastRotation().fastRotation());
+		assertEquals(pyr4, firstPyr.fastRotation().fastRotation().fastRotation());
+		assertEquals(pyr1, firstPyr.fastRotation().fastRotation().fastRotation().fastRotation());
+		assertEquals(pyr2, firstPyr.fastRotation().fastRotation().fastRotation().fastRotation().fastRotation());
+		
+		// Test stick fast rotation
+		Piece firstStick = pieces[Piece.STICK];
+		assertEquals(firstStick.computeNextRotation(), firstStick.fastRotation());
+		
+		// Test L fast rotation
+		Piece firstL = pieces[Piece.L1];
+		assertEquals(firstL.computeNextRotation(), firstL.fastRotation());
+		assertEquals(firstL.computeNextRotation().computeNextRotation(), firstL.fastRotation().fastRotation());
+		assertEquals(firstL.computeNextRotation().computeNextRotation().computeNextRotation(), firstL.fastRotation().fastRotation().fastRotation());
+	}
 }
