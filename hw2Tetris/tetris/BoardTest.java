@@ -24,12 +24,16 @@ public class BoardTest {
 		s = new Piece(Piece.S1_STR);
 		sRotated = s.computeNextRotation();
 		
+		stick = new Piece(Piece.STICK_STR);
+
 		b.place(pyr1, 0, 0);
 	}
 	
 	// Check the basic width/height/max after the one placement
 	@Test
 	public void testSample1() {
+		System.out.println("======================================");
+		System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
 		assertEquals(1, b.getColumnHeight(0));
 		assertEquals(2, b.getColumnHeight(1));
 		assertEquals(2, b.getMaxHeight());
@@ -41,6 +45,8 @@ public class BoardTest {
 	// Place sRotated into the board, then check some measures
 	@Test
 	public void testSample2() {
+		System.out.println("======================================");
+		System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
 		b.commit();
 		int result = b.place(sRotated, 1, 1);
 		assertEquals(Board.PLACE_OK, result);
@@ -57,6 +63,8 @@ public class BoardTest {
 	// Test dropHeight
 	@Test
 	public void testSample3() {
+		System.out.println("======================================");
+		System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
 		b.commit();
 		assertEquals(2, b.dropHeight(sRotated, 0));
 		assertEquals(1, b.dropHeight(sRotated, 1));
@@ -68,7 +76,9 @@ public class BoardTest {
 	// Test place()/clearRows() series, and then an undo()
 	@Test
 	public void testSample4() {
-		System.out.println(b.toString());
+		System.out.println("======================================");
+		System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+		printBoard();
 		b.clearRows();
 		assertEquals(1, b.getMaxHeight());
 		assertEquals(1, b.getRowWidth(0));
@@ -86,10 +96,10 @@ public class BoardTest {
 		assertEquals(0, b.getColumnHeight(2));
 		
 		b.place(pyr1, 0, 0);
-		System.out.println(b.toString());
+		printBoard();
 		b.commit();
 		b.place(pyr1, 0, 2);
-		System.out.println(b.toString());
+		printBoard();
 		b.clearRows();
 		assertEquals(2, b.getMaxHeight());
 		assertEquals(1, b.getRowWidth(0));
@@ -102,6 +112,8 @@ public class BoardTest {
 	// Test place in the air
 	@Test
 	public void TestSample5() {
+		System.out.println("======================================");
+		System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
 		b.undo();
 		Piece square = new Piece(Piece.SQUARE_STR);
 		assertEquals(Board.PLACE_OK, b.place(square, 0, 4));
@@ -119,9 +131,52 @@ public class BoardTest {
 	// Advance testing, simulate a more complicated sequences
 	@Test
 	public void TestSample6() {
-		// TODO
+		System.out.println("======================================");
+		System.out.println(Thread.currentThread().getStackTrace()[1].getMethodName());
+		printBoard();
+		b.commit();
+		
+		assertEquals(Board.PLACE_ROW_FILLED, b.place(pyr3, 0, 2));
+		printBoard();
+		b.clearRows();
+		printBoard();
+		assertEquals(0, b.getColumnHeight(0));
+		assertEquals(2, b.getColumnHeight(1));
+		assertEquals(0, b.getColumnHeight(2));
+
+		b.commit();
+		b.place(stick, 0, 0);
+		b.commit();
+		b.place(stick, 2, 0);
+		printBoard();
+		assertEquals(4, b.getColumnHeight(0));
+		assertEquals(2, b.getColumnHeight(1));
+		assertEquals(4, b.getColumnHeight(2));
+		b.clearRows();
+		printBoard();
+		assertEquals(2, b.getColumnHeight(0));
+		assertEquals(0, b.getColumnHeight(1));
+		assertEquals(2, b.getColumnHeight(2));
+		b.commit();
+
+		b.place(pyr3, 0, 1);
+		printBoard();
+		assertEquals(3, b.getColumnHeight(0));
+		assertEquals(3, b.getColumnHeight(1));
+		assertEquals(3, b.getColumnHeight(2));
+
+		b.clearRows();
+		printBoard();
+		assertEquals(1, b.getColumnHeight(0));
+		assertEquals(0, b.getColumnHeight(1));
+		assertEquals(1, b.getColumnHeight(2));
+	}
+
+	private void printBoard()
+	{
+		System.out.println(b.toString());
 	}
 
 	Board b;
-	Piece pyr1, pyr2, pyr3, pyr4, s, sRotated;
+	Piece pyr1, pyr2, pyr3, pyr4, s, sRotated, stick;
 }
