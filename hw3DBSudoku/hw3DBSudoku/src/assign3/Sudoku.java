@@ -98,7 +98,21 @@ public class Sudoku {
 		return result;
 	}
 	
-	
+	/**
+	 * Given a 9x9 grid, return the text form of the grid
+	 * @param g 2d array
+	 * @return text string of 81 numbers
+	 */
+	public static String gridToText(int[][] g) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < g.length; i++) {
+			for (int j = 0; j < g[0].length; j++)
+				sb.append(" " + g[i][j]);
+			sb.append("\n");
+		}
+		return sb.toString();
+	}
+
 	/**
 	 * Given a string containing digits, like "1 23 4",
 	 * returns an int[] of those digits {1 2 3 4}.
@@ -142,24 +156,188 @@ public class Sudoku {
 	 * Sets up based on the given ints.
 	 */
 	public Sudoku(int[][] ints) {
-		// YOUR CODE HERE
+		grid = ints.clone();
+		sol = grid.clone();
+		findUnsignedSpots();
+		Collections.sort(unsignedSpots);
+		solText = "";
 	}
-	
-	
-	
+
+	/**
+	 * Sets up based on the given grid text
+	 */
+	public Sudoku(String text) {
+		this(textToGrid(text));
+	}
+
+	@Override
+	public String toString() {
+		return gridToText(grid);
+	}
+
+
 	/**
 	 * Solves the puzzle, invoking the underlying recursive search.
 	 */
 	public int solve() {
-		return 0; // YOUR CODE HERE
+		startTime = System.currentTimeMillis();
+		count = 0;
+
+		recSolve(0);
+		timeConsumed = System.currentTimeMillis() - startTime;
+
+		return count;
 	}
 	
 	public String getSolutionText() {
-		return ""; // YOUR CODE HERE
+		return solText;
 	}
 	
 	public long getElapsed() {
-		return 0; // YOUR CODE HERE
+		return timeConsumed;
 	}
 
+	/**
+	 * get a list of unsigned spots of the original grid
+	 * @return
+	 */
+	public List<Spot> getUnsignedSpots() {
+		return unsignedSpots;
+	}
+
+	/*
+	 * Spot in sol grid
+	 */
+	public final class Spot implements Comparable<Spot>
+	{
+		public Spot(int r, int c, int num) {
+			this.r = r;
+			this.c = c;
+			sol[r][c] = num;
+			assignableNums = new ArrayList<Integer>();
+			findAssignableNums();
+		}
+
+		@Override
+		public int compareTo(Spot spot) {
+			return assignableNums.size() - spot.getAssignableNums().size();
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder sb = new StringBuilder();
+			sb.append("row: " + r + ",");
+			sb.append("col: " + c + ",");
+			sb.append("num: " + sol[r][c] + ",");
+			sb.append("assignable nums: " + assignableNums + "\n");
+
+			return sb.toString();
+		}
+
+		public int getNum() {
+			return sol[r][c];
+		}
+
+		/**
+		 * Attempt to set spot num, return true if setting such num is legal(not violating all rules),
+		 * other return false, and leaving the sol grid intact
+		 */
+		public boolean setNum(int num) {
+			if (num == 0) {
+				sol[r][c] = num;
+				return true;
+			}
+
+			for (int i = 0; i < SIZE; i++)
+				if (sol[i][c] == num)
+					return false;
+			for (int j = 0; j < SIZE; j++)
+				if (sol[r][j] == num)
+					return false;
+			for (int i = r / PART * PART; i < r / PART * PART + PART; i++)
+				for (int j = c / PART * PART; j < c / PART * PART + PART; j++)
+					if (sol[i][j] == num)
+						return false;
+
+			sol[r][c] = num;
+
+			return true;
+		}
+
+		public List<Integer> getAssignableNums() {
+			return assignableNums;
+		}
+
+		private void findAssignableNums() {
+			boolean[] assignable = new boolean[10];
+			Arrays.fill(assignable, true);
+
+			for (int i = 0; i < SIZE; i++)
+				assignable[grid[i][c]] = false;
+			for (int j = 0; j < SIZE; j++)
+				assignable[grid[r][j]] = false;
+			for (int i = r / PART * PART; i < r / PART * PART + PART; i++)
+				for (int j = c / PART * PART; j < c / PART * PART + PART; j++)
+					assignable[grid[i][j]] = false;
+			for (int i = 1; i < 10; i++)
+				if (assignable[i])
+					assignableNums.add(i);
+		}
+
+		private int r, c;
+		private List<Integer> assignableNums; // assignable numbers for this spot, based on the original grid
+	}
+
+	private void findUnsignedSpots()
+	{
+		unsignedSpots = new ArrayList<Spot>();
+
+		for (int r = 0; r < grid.length; r++)
+			for (int c = 0; c < grid[0].length; c++)
+				if (grid[r][c] == 0)
+					unsignedSpots.add(new Spot(r, c, 0));
+	}
+
+	/*
+	 * find all solution, given a current grid sol, and unsigned spots i...unsignedSpots.size() - 1
+	 */
+	private void recSolve(int i)
+	{
+		if (count == MAX_SOLUTIONS)
+			return;
+		if (i == unsignedSpots.size()) {
+			count++;
+			if (count == 1)
+				buildSolText();
+			return;
+		}
+		Spot uSpot = unsignedSpots.get(i);
+		for (int j = 0; j < uSpot.getAssignableNums().size(); j++) {
+			if (uSpot.setNum(uSpot.getAssignableNums().get(j))) {
+				//System.out.println("Assigned # " + i + " unsigned spot");
+				//System.out.println(gridToText(sol));
+				//System.out.println(uSpot);
+				recSolve(i + 1);
+				uSpot.setNum(0);
+			}
+		}
+	}
+
+	private void buildSolText() {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < sol.length; i++) {
+			for (int j = 0; j < sol[0].length; j++)
+				sb.append(" " + sol[i][j]);
+			sb.append("\n");
+		}
+		solText =  sb.toString();
+	}
+
+	private int[][] grid;
+	private int[][] sol;
+	private int count;
+	private long startTime;
+	private long timeConsumed;
+	private List<Spot> unsignedSpots; // unsigned spots in the original grid
+	private String solText;
 }
