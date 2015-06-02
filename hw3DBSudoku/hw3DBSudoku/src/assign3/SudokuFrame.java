@@ -4,8 +4,6 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.*;
 
-import com.sun.tools.hat.internal.model.JavaBoolean;
-
 import java.awt.*;
 import java.awt.event.*;
 
